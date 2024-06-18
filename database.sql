@@ -35,50 +35,14 @@ CREATE TABLE pacientes(
   ON DELETE CASCADE
 ) ENGINE=INNODB;
 
-CREATE TABLE especialidades(
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `nome` VARCHAR(255) NOT NULL,
-  `descricao` VARCHAR(255) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE (`nome`)
-) ENGINE=INNODB;
-
 CREATE TABLE medicos(
   `pessoaId` INT NOT NULL,
   `crm` VARCHAR(45) NOT NULL,
-  `especialidadeId` INT NULL DEFAULT 0,
-  UNIQUE (`pessoaId`),
+  `especialidade` VARCHAR(255) NOT NULL,
   UNIQUE (`crm`),
+  UNIQUE (`pessoaId`),
 
   FOREIGN KEY (`pessoaId`)
   REFERENCES `pessoas` (`id`)
-  ON DELETE CASCADE,
-
-  FOREIGN KEY (`especialidadeId`)
-  REFERENCES `especialidades` (`id`)
-) ENGINE=INNODB;
-
-CREATE TABLE exames(
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `nome` VARCHAR(255) NOT NULL,
-  `descricao` VARCHAR(255) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE (`nome`)
-) ENGINE=INNODB;
-
-CREATE TABLE compromissos(
-  `pacienteId` INT NOT NULL,
-  `medicoId` INT NOT NULL,
-  `data` DATE NOT NULL,
-  `hora` TIME NOT NULL,
-  `exameId` INT NULL DEFAULT 0,
-
-  FOREIGN KEY (`pacienteId`)
-  REFERENCES `pacientes` (`pessoaId`),
-
-  FOREIGN KEY (`medicoId`)
-  REFERENCES `medicos` (`pessoaId`),
-
-  FOREIGN KEY (`exameId`)
-  REFERENCES `exames` (`id`)
+  ON DELETE CASCADE
 ) ENGINE=INNODB;

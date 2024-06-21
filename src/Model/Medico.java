@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -31,8 +30,12 @@ public class Medico extends Pessoa {
     return especialidade;
   }
 
-  public void setEspecialidade(String especialidade) {
+  public Boolean setEspecialidade(String especialidade) {
+    if (especialidade.length() < 3) {
+      return false;
+    }
     this.especialidade = especialidade;
+    return true;
   }
 
   public Boolean souMedico(Connection conexao) throws SQLException {
@@ -93,19 +96,8 @@ public class Medico extends Pessoa {
 
       conexao.setAutoCommit(false);
 
-      sql = "INSERT INTO pessoas(nome, endereco, email, dataDeNascimento, telefone, celular) VALUES(?, ?, ?, ?, ?, ?)";
-      try (PreparedStatement ps = conexao.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-        ps.setString(1, nome);
-        ps.setString(2, endereco);
-        ps.setString(3, email);
-        ps.setString(4, dataDeNascimento);
-        ps.setString(5, telefone);
-        ps.setString(6, celular);
-        ps.execute();
-        ResultSet rst = ps.getGeneratedKeys();
-        if (rst.next()) {
-          id = rst.getLong(1);
-        }
+      try {
+        criarPessoa(this, conexao);
       } catch (Exception e) {
         conexao.rollback();
         throw e;
@@ -155,16 +147,8 @@ public class Medico extends Pessoa {
 
       conexao.setAutoCommit(false);
 
-      sql = "UPDATE pessoas SET nome = ?, endereco = ?, email = ?, dataDeNascimento = ?, telefone = ?, celular = ? WHERE id = ?";
-      try (PreparedStatement ps = conexao.prepareStatement(sql)) {
-        ps.setString(1, nome);
-        ps.setString(2, endereco);
-        ps.setString(3, email);
-        ps.setString(4, dataDeNascimento);
-        ps.setString(5, telefone);
-        ps.setString(6, celular);
-        ps.setLong(7, id);
-        ps.execute();
+      try {
+        atualizarPessoa(this, conexao);
       } catch (Exception e) {
         conexao.rollback();
         throw e;
@@ -210,16 +194,12 @@ public class Medico extends Pessoa {
       try (PreparedStatement ps = conexao.prepareStatement(sql)) {
         ps.setString(1, crm);
         ResultSet result = ps.executeQuery();
-        if (result.next()) {
-          medico = new Medico();
-          medico.id = result.getLong("id");
-          medico.nome = result.getString("nome");
-          medico.endereco = result.getString("endereco");
-          medico.email = result.getString("email");
-          medico.dataDeNascimento = result.getString("dataDeNascimento");
+        medico = new Medico();
+        if (mapearPessoa(medico, result)) {
           medico.crm = result.getString("crm");
-          medico.celular = result.getString("celular");
-          medico.telefone = result.getString("telefone");
+          medico.especialidade = result.getString("especialidade");
+        } else {
+          medico = null;
         }
       }
     }
@@ -232,17 +212,15 @@ public class Medico extends Pessoa {
       String sql = "SELECT * FROM medicos AS `me` INNER JOIN pessoas AS `pe` ON `me`.pessoaId = `pe`.id";
       try (PreparedStatement ps = conexao.prepareStatement(sql)) {
         ResultSet result = ps.executeQuery();
-        while (result.next()) {
+        while (true) {
           Medico medico = new Medico();
-          medico.id = result.getLong("id");
-          medico.nome = result.getString("nome");
-          medico.endereco = result.getString("endereco");
-          medico.email = result.getString("email");
-          medico.dataDeNascimento = result.getString("dataDeNascimento");
-          medico.crm = result.getString("crm");
-          medico.celular = result.getString("celular");
-          medico.telefone = result.getString("telefone");
-          medicos.add(medico);
+          if (mapearPessoa(medico, result)) {
+            medico.crm = result.getString("crm");
+            medico.especialidade = result.getString("especialidade");
+            medicos.add(medico);
+          } else {
+            break;
+          }
         }
       }
     }
@@ -308,10 +286,10 @@ public class Medico extends Pessoa {
       System.out.println(e.getMessage());
     }
 
-    try {
-      novoMedico.remover();
-    } catch (Exception exception) {
-      System.out.println(exception.getMessage());
-    }
+//    try {
+//      novoMedico.remover();
+//    } catch (Exception exception) {
+//      System.out.println(exception.getMessage());
+//    }
   }
 }

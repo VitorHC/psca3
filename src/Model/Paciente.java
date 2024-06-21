@@ -275,16 +275,20 @@ public class Paciente extends Pessoa {
       System.out.println(e.getMessage());
     }
 
+    String cpfProcurado = "134-879-266-36";
     try {
       for (Paciente paciente : buscarTodos()) {
-        System.out.println(paciente.id);
-        System.out.println(paciente.nome);
-        System.out.println(paciente.email);
-        System.out.println(paciente.endereco);
-        System.out.println(paciente.cpf);
-        System.out.println(paciente.dataDeNascimento);
-        System.out.println(paciente.celular);
-        System.out.println(paciente.telefone);
+        if (paciente.cpf.equals(cpfProcurado)) {
+          System.out.println("achei o paciente");
+        }
+//        System.out.println(paciente.id);
+//        System.out.println(paciente.nome);
+//        System.out.println(paciente.email);
+//        System.out.println(paciente.endereco);
+//        System.out.println(paciente.cpf);
+//        System.out.println(paciente.dataDeNascimento);
+//        System.out.println(paciente.celular);
+//        System.out.println(paciente.telefone);
       }
     } catch (Exception e) {
       System.out.println(e.getMessage());

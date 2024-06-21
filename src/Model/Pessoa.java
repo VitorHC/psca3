@@ -1,5 +1,6 @@
 package Model;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -24,7 +25,7 @@ public class Pessoa extends Modelo {
     return id;
   }
 
-  protected void setId(Long id) {
+  public void setId(Long id) {
     this.id = id;
   }
 
@@ -44,8 +45,12 @@ public class Pessoa extends Modelo {
     return endereco;
   }
 
-  public void setEndereco(String endereco) {
+  public Boolean setEndereco(String endereco) {
+    if (endereco.length() < 3) {
+      return false;
+    }
     this.endereco = endereco;
+    return true;
   }
 
   public String getEmail() {
@@ -117,6 +122,52 @@ public class Pessoa extends Modelo {
     }
     if (dataDeNascimento.isEmpty()) {
       throw new EntidadeInvalida("Data de nascimento inválida.");
+    }
+  }
+
+  protected static Boolean mapearPessoa(Pessoa pessoa, ResultSet resultSet) throws SQLException {
+    if (resultSet.next()) {
+      pessoa.id = resultSet.getLong("id");
+      pessoa.nome = resultSet.getString("nome");
+      pessoa.endereco = resultSet.getString("endereco");
+      pessoa.email = resultSet.getString("email");
+      pessoa.dataDeNascimento = resultSet.getString("dataDeNascimento");
+      pessoa.celular = resultSet.getString("celular");
+      pessoa.telefone = resultSet.getString("telefone");
+      return true;
+    }
+    return false;
+  }
+
+  protected static void criarPessoa(Pessoa pessoa, Connection conexao) throws SQLException {
+    String sql = "INSERT INTO pessoas(nome, endereco, email, dataDeNascimento, telefone, celular) VALUES(?, ?, ?, ?, ?, ?)";
+    try (PreparedStatement ps = conexao.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+      ps.setString(1, pessoa.nome);
+      ps.setString(2, pessoa.endereco);
+      ps.setString(3, pessoa.email);
+      ps.setString(4, pessoa.dataDeNascimento);
+      ps.setString(5, pessoa.telefone);
+      ps.setString(6, pessoa.celular);
+      ps.execute();
+      ResultSet rst = ps.getGeneratedKeys();
+      if (!rst.next()) {
+        throw new SQLException("Não foi encontrado id retornado ao criar pessoa");
+      }
+      pessoa.id = rst.getLong(1);
+    }
+  }
+
+  protected static void atualizarPessoa(Pessoa pessoa, Connection conexao) throws SQLException {
+    String sql = "UPDATE pessoas SET nome = ?, endereco = ?, email = ?, dataDeNascimento = ?, telefone = ?, celular = ? WHERE id = ?";
+    try (PreparedStatement ps = conexao.prepareStatement(sql)) {
+      ps.setString(1, pessoa.nome);
+      ps.setString(2, pessoa.endereco);
+      ps.setString(3, pessoa.email);
+      ps.setString(4, pessoa.dataDeNascimento);
+      ps.setString(5, pessoa.telefone);
+      ps.setString(6, pessoa.celular);
+      ps.setLong(7, pessoa.id);
+      ps.execute();
     }
   }
 }

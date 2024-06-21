@@ -72,26 +72,34 @@ public class Medico extends JFrame {
 
     GridBagConstraints gbc = null;
 
+    JPanel painelPrincipal = new JPanel();
+    painelPrincipal.setLayout(new GridBagLayout());
+    painelPrincipal.setBackground(Color.WHITE);
+
     JLabel rotuloTitulo = new JLabel("Médico");
     rotuloTitulo.setBackground(Color.WHITE);
     rotuloTitulo.setFont(new Font("Arial", Font.BOLD, 18));
-    add(rotuloTitulo);
+    painelPrincipal.add(rotuloTitulo);
 
     criarPainelDeInformacoes(medico);
     gbc = new GridBagConstraints();
     gbc.anchor = GridBagConstraints.PAGE_START;
-    gbc.gridy = 2;
-    gbc.weightx = 1;
-    gbc.weighty = 4;
-    add(painelDeInformacoes, gbc);
+    gbc.gridy = 1;
+    gbc.weighty = 1;
+    gbc.insets = new Insets(20, 0, 20, 0);
+    painelPrincipal.add(painelDeInformacoes, gbc);
 
     criarBotaoAtualizar();
     gbc = new GridBagConstraints();
     gbc.anchor = GridBagConstraints.PAGE_START;
-    gbc.gridy = 3;
-    gbc.weightx = 1;
-    gbc.weighty = 4;
-    add(botaoAtualizar, gbc);
+    gbc.gridy = 2;
+    painelPrincipal.add(botaoAtualizar, gbc);
+
+    gbc = new GridBagConstraints();
+    gbc.anchor = GridBagConstraints.PAGE_START;
+    gbc.gridy = 1;
+    gbc.weighty = 1;
+    add(painelPrincipal, gbc);
   }
 
   public static void main(String[] args) {

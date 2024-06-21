@@ -124,7 +124,9 @@ public class MedicoForm extends JFrame {
         }
         m.setTelefone(campoTelefone.getText());
         m.setCelular(campoCelular.getText());
-        m.setId(medico.getId());
+        if (medico != null) {
+          m.setId(medico.getId());
+        }
         try {
           String mensagemDeSucesso;
           if (medico == null) {

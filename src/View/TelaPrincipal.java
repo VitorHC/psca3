@@ -81,6 +81,14 @@ public class TelaPrincipal extends JFrame{
             }
         });
 
+        btnFuncionario.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                new View.FuncionarioForm().setVisible(true);
+                dispose();
+            }
+        });
+
         btnSair.addActionListener( new ActionListener() { public void actionPerformed(ActionEvent e)
         { System.exit(0); } });
     }

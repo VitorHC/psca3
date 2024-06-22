@@ -2,15 +2,13 @@ package Model;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 
 
 public class BancoDeDados {
     private static String servidor="jdbc:mysql://127.0.0.1:3306/clinica";
     private static String usuario="root";
-    private static String senha="q2w1";
+    private static String senha="";
     private static String driver="com.mysql.jdbc.Driver";
 
     public static void main(String[] args){

@@ -17,7 +17,7 @@ public class Paciente extends JFrame {
   private Model.Paciente paciente;
   private JPanel painelDeInformacoes;
   private int informacaoGridY = 0;
-  private JButton botaoAtualizar;
+  private JButton botaoAtualizar,botaoVoltar,botaoDelete;
 
   private void adicionarInformacao(String nomeCampo, String valorCampo) {
     JLabel rotulo = new JLabel(nomeCampo);
@@ -59,6 +59,20 @@ public class Paciente extends JFrame {
     });
   }
 
+  private void criarBotaoVoltar(){
+    botaoVoltar = new JButton("Voltar");
+    botaoVoltar.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent event){
+        new Pacientes().setVisible(true);
+        dispose();
+      }
+    });
+
+  }
+
+
+
   Paciente(Model.Paciente p) {
     paciente = p;
     setTitle("Paciente " + paciente.getNome());
@@ -94,11 +108,30 @@ public class Paciente extends JFrame {
     gbc.gridy = 2;
     painelPrincipal.add(botaoAtualizar, gbc);
 
+    criarBotaoVoltar();
+    gbc = new GridBagConstraints();
+    gbc.anchor = GridBagConstraints.PAGE_START;
+    gbc.gridy = 2;
+    painelPrincipal.add(botaoVoltar, gbc);
+
     gbc = new GridBagConstraints();
     gbc.anchor = GridBagConstraints.PAGE_START;
     gbc.gridy = 1;
     gbc.weighty = 1;
     add(painelPrincipal, gbc);
+  }
+
+  private void deletarbotao(){
+    botaoDelete = new JButton("Deletar");
+    botaoDelete.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent event){
+     
+
+     new Pacientes().setVisible(true);
+      dispose();
+      }
+    });
   }
 
   public static void main(String[] args) {

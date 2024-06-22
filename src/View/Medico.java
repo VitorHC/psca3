@@ -18,7 +18,7 @@ public class Medico extends JFrame {
   private Model.Medico medico;
   private JPanel painelDeInformacoes;
   private int informacaoGridY = 0;
-  private JButton botaoAtualizar;
+  private JButton botaoAtualizar, botaoVoltar, botaoDelete;
 
   private void adicionarInformacao(String nomeCampo, String valorCampo) {
     JLabel rotulo = new JLabel(nomeCampo);
@@ -61,6 +61,18 @@ public class Medico extends JFrame {
     });
   }
 
+  private void criarBotaoVoltar(){
+    botaoVoltar = new JButton("Voltar");
+    botaoVoltar.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent event){
+        new Medicos().setVisible(true);
+        dispose();
+      }
+    });
+
+  }
+
   Medico(Model.Medico m) {
     medico = m;
     setTitle("Médico " + medico.getNome());
@@ -95,6 +107,12 @@ public class Medico extends JFrame {
     gbc.anchor = GridBagConstraints.PAGE_START;
     gbc.gridy = 2;
     painelPrincipal.add(botaoAtualizar, gbc);
+
+    criarBotaoVoltar();
+    gbc = new GridBagConstraints();
+    gbc.anchor = GridBagConstraints.PAGE_START;
+    gbc.gridy = 2;
+    painelPrincipal.add(botaoVoltar, gbc);
 
     gbc = new GridBagConstraints();
     gbc.anchor = GridBagConstraints.PAGE_START;

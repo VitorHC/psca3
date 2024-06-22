@@ -33,7 +33,7 @@ public class Medicos extends JFrame {
 
   private JTextField campoDeBusca;
 
-  private JButton botaoBuscar, botaoAdicionar;
+  private JButton botaoBuscar, botaoAdicionar, botaoVoltar, botaoDelte;
 
   private JList listaMedicos;
 
@@ -111,6 +111,7 @@ public class Medicos extends JFrame {
       }
     });
   }
+ 
 
   private JPanel criarPaineldoBotaoAdicionar() {
     JPanel painelBotaoAdicionar = new JPanel();

@@ -143,7 +143,10 @@ public class Pacientes extends JFrame {
       @Override
       public void valueChanged(ListSelectionEvent event) {
         if (!event.getValueIsAdjusting()) {
-          descricaoSelecionada = ((JList<?>) event.getSource()).getSelectedValue().toString();
+          String valorSelecionado = ((JList<String>) event.getSource()).getSelectedValue();
+          if (valorSelecionado != null) {
+            descricaoSelecionada = valorSelecionado;
+          }
         }
       }
     });

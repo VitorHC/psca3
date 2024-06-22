@@ -88,7 +88,7 @@ public class TelaPrincipal extends JFrame{
     public static void main(String[] args) {
         EventQueue.invokeLater(() -> {
             try {
-                Funcionario f = Funcionario.login("aluisio@gmail.com", "12345");
+                Funcionario f = Funcionario.login("aluisioordones1@gmail.com", "12345");
                 if (f == null) {
                     showMessageDialog(null, "Funcionário não encontrado. Fechando aplicação");
                     System.exit(0);

@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class Medico extends Pessoa {
+
   private String crm = "";
 
   public String getCRM() {
@@ -59,7 +60,8 @@ public class Medico extends Pessoa {
     return true;
   }
 
-  @Override public void validar() throws EntidadeInvalida {
+  @Override
+  public void validar() throws EntidadeInvalida {
     try {
       super.validar();
     } catch (EntidadeInvalida excep) {
@@ -73,118 +75,105 @@ public class Medico extends Pessoa {
     }
   }
 
-  @Override public void criar() throws SQLException, EntidadeInvalida, ConflitoDeEntidade {
+  @Override
+  protected void mapear(ResultSet resultSet) throws SQLException {
+    super.mapear(resultSet);
+    crm = resultSet.getString("crm");
+    especialidade = resultSet.getString("especialidade");
+  }
+
+  protected Boolean possuoCRMUnico(Connection conexao) throws SQLException {
+    boolean manterConexao = true;
+    if (conexao == null) {
+      conexao = BancoDeDados.pegarConexao();
+      manterConexao = false;
+    }
+    boolean crmUnico = true;
+    String sql = "SELECT * FROM medicos WHERE crm = ?";
+    try (PreparedStatement ps = conexao.prepareStatement(sql)) {
+      ps.setString(1, crm);
+      ResultSet rst = ps.executeQuery();
+      if (rst.next() && rst.getLong("pessoaId") != id) {
+        crmUnico = false;
+      }
+    }
+    if (!manterConexao) {
+      conexao.close();
+    }
+    return crmUnico;
+  }
+
+  @Override
+  protected void criar(Connection conexao)
+      throws SQLException, EntidadeInvalida, ConflitoDeEntidade {
     if (id > 0) {
       throw new ConflitoDeEntidade("Tentativa de criar médico que já possui um id", "Médico");
     }
 
     validar();
 
-    try (Connection conexao = BancoDeDados.pegarConexao()) {
-      String sql = "SELECT * FROM pessoas AS `pe` INNER JOIN medicos AS `me` ON `pe`.id = `me`.pessoaId WHERE email = ? OR crm = ?";
-      try (PreparedStatement ps = conexao.prepareStatement(sql)) {
-        ps.setString(1, email);
-        ps.setString(2, crm);
-        ResultSet rst = ps.executeQuery();
-        while (rst.next()) {
-          if (rst.getString("email").equals(email)) {
-            throw new ConflitoDeEntidade("E-mail em uso", "Médico");
-          }
-          throw new ConflitoDeEntidade("CRM em uso", "Médico");
-        }
-      }
-
-      conexao.setAutoCommit(false);
-
-      try {
-        criarPessoa(this, conexao);
-      } catch (Exception e) {
-        conexao.rollback();
-        throw e;
-      }
-
-      sql = "INSERT INTO medicos(pessoaId, crm, especialidade) VALUES (?, ?, ?)";
-      try (PreparedStatement ps = conexao.prepareStatement(sql)) {
-        ps.setLong(1, id);
-        ps.setString(2, crm);
-        ps.setString(3, especialidade);
-        ps.execute();
-      } catch (Exception e) {
-        conexao.rollback();
-        throw e;
-      }
-
-      conexao.commit();
+    if (!possuoEmailUnico(conexao)) {
+      throw new ConflitoDeEntidade("E-mail em uso", "Médico");
     }
+    if (!possuoCRMUnico(conexao)) {
+      throw new ConflitoDeEntidade("CRM em uso", "Médico");
+    }
+
+    conexao.setAutoCommit(false);
+
+    super.criar(conexao);
+
+    String sql = "INSERT INTO medicos(pessoaId, crm, especialidade) VALUES (?, ?, ?)";
+    try (PreparedStatement ps = conexao.prepareStatement(sql)) {
+      ps.setLong(1, id);
+      ps.setString(2, crm);
+      ps.setString(3, especialidade);
+      ps.execute();
+    }
+
+    conexao.commit();
   }
 
-  @Override public void atualizar() throws SQLException, EntidadeInvalida, ConflitoDeEntidade {
+  @Override
+  protected void atualizar(Connection conexao)
+      throws SQLException, EntidadeInvalida, ConflitoDeEntidade {
     if (id == 0) {
       throw new ConflitoDeEntidade("Tentativa de atualizar médico sem um id", "Médico");
     }
 
     validar();
 
-    try (Connection conexao = BancoDeDados.pegarConexao()) {
-      if (!souMedico(conexao)) {
-        throw new ConflitoDeEntidade("Tentativa de atualizar médico sem registro", "Médico");
-      }
-      String sql = "SELECT * FROM medicos AS `me` INNER JOIN pessoas AS `pe` ON `me`.pessoaId = `pe`.id WHERE email = ? OR crm = ?";
-      try (PreparedStatement ps = conexao.prepareStatement(sql)) {
-        ps.setString(1, email);
-        ps.setString(2, crm);
-        ResultSet rst = ps.executeQuery();
-        while (rst.next()) {
-          Long idExistente = rst.getLong("id");
-          if (!idExistente.equals(id)) {
-            if (rst.getString("email").equals(email)) {
-              throw new ConflitoDeEntidade("E-mail em uso", "Médico");
-            }
-            throw new ConflitoDeEntidade("CRM em uso", "Médico");
-          }
-        }
-      }
+    if (!souMedico(conexao)) {
+      throw new ConflitoDeEntidade("Tentativa de atualizar médico sem registro", "Médico");
+    }
+    if (!possuoEmailUnico(conexao)) {
+      throw new ConflitoDeEntidade("E-mail em uso", "Médico");
+    }
+    if (!possuoCRMUnico(conexao)) {
+      throw new ConflitoDeEntidade("CRM em uso", "Médico");
+    }
 
-      conexao.setAutoCommit(false);
+    super.atualizar(conexao);
 
-      try {
-        atualizarPessoa(this, conexao);
-      } catch (Exception e) {
-        conexao.rollback();
-        throw e;
-      }
-
-      sql = "UPDATE medicos SET crm = ?, especialidade = ? WHERE pessoaId = ?";
-      try (PreparedStatement ps = conexao.prepareStatement(sql)) {
-        ps.setString(1, crm);
-        ps.setString(2, especialidade);
-        ps.setLong(3, id);
-        ps.execute();
-      } catch (Exception e) {
-        conexao.rollback();
-        throw e;
-      }
-
-      conexao.commit();
+    String sql = "UPDATE medicos SET crm = ?, especialidade = ? WHERE pessoaId = ?";
+    try (PreparedStatement ps = conexao.prepareStatement(sql)) {
+      ps.setString(1, crm);
+      ps.setString(2, especialidade);
+      ps.setLong(3, id);
+      ps.execute();
     }
   }
 
-  @Override public void remover() throws SQLException, ConflitoDeEntidade {
+  @Override
+  protected void remover(Connection conexao) throws SQLException, ConflitoDeEntidade {
     if (id == 0) {
       throw new ConflitoDeEntidade("Tentativa de remover médico sem id", "Médico");
     }
-
-    try (Connection conexao = BancoDeDados.pegarConexao()) {
-      if (!souMedico(conexao)) {
-        throw new ConflitoDeEntidade(
-            "Tentativa de remover pessoa que não existe ou que não é um médico", "Médico");
-      }
-      String sql = "DELETE FROM pessoas WHERE id = ?";
-      try (PreparedStatement ps = conexao.prepareStatement(sql)) {
-        ps.setLong(1, id);
-        ps.execute();
-      }
+    if (!souMedico(conexao)) {
+      throw new ConflitoDeEntidade(
+          "Tentativa de remover pessoa que não existe ou que não é um médico", "Médico");
     }
+    super.remover(conexao);
   }
 
   public static Optional<Medico> buscar(String crm) throws SQLException {
@@ -194,12 +183,9 @@ public class Medico extends Pessoa {
       try (PreparedStatement ps = conexao.prepareStatement(sql)) {
         ps.setString(1, crm);
         ResultSet result = ps.executeQuery();
-        medico = new Medico();
-        if (mapearPessoa(medico, result)) {
-          medico.crm = result.getString("crm");
-          medico.especialidade = result.getString("especialidade");
-        } else {
-          medico = null;
+        if (result.next()) {
+          medico = new Medico();
+          medico.mapear(result);
         }
       }
     }
@@ -212,15 +198,10 @@ public class Medico extends Pessoa {
       String sql = "SELECT * FROM medicos AS `me` INNER JOIN pessoas AS `pe` ON `me`.pessoaId = `pe`.id";
       try (PreparedStatement ps = conexao.prepareStatement(sql)) {
         ResultSet result = ps.executeQuery();
-        while (true) {
+        while (result.next()) {
           Medico medico = new Medico();
-          if (mapearPessoa(medico, result)) {
-            medico.crm = result.getString("crm");
-            medico.especialidade = result.getString("especialidade");
-            medicos.add(medico);
-          } else {
-            break;
-          }
+          medico.mapear(result);
+          medicos.add(medico);
         }
       }
     }

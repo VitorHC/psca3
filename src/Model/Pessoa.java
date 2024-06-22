@@ -13,6 +13,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Pessoa extends Modelo {
+
   protected Long id = 0L;
   protected String nome = "";
   protected String endereco = "";
@@ -110,7 +111,8 @@ public class Pessoa extends Modelo {
     this.celular = celular;
   }
 
-  @Override public void validar() throws EntidadeInvalida {
+  @Override
+  public void validar() throws EntidadeInvalida {
     if (nome.isEmpty()) {
       throw new EntidadeInvalida("Nome inválido.");
     }
@@ -125,49 +127,79 @@ public class Pessoa extends Modelo {
     }
   }
 
-  protected static Boolean mapearPessoa(Pessoa pessoa, ResultSet resultSet) throws SQLException {
-    if (resultSet.next()) {
-      pessoa.id = resultSet.getLong("id");
-      pessoa.nome = resultSet.getString("nome");
-      pessoa.endereco = resultSet.getString("endereco");
-      pessoa.email = resultSet.getString("email");
-      pessoa.dataDeNascimento = resultSet.getString("dataDeNascimento");
-      pessoa.celular = resultSet.getString("celular");
-      pessoa.telefone = resultSet.getString("telefone");
-      return true;
-    }
-    return false;
+  @Override
+  protected void mapear(ResultSet resultSet) throws SQLException {
+    id = resultSet.getLong("id");
+    nome = resultSet.getString("nome");
+    endereco = resultSet.getString("endereco");
+    email = resultSet.getString("email");
+    dataDeNascimento = resultSet.getString("dataDeNascimento");
+    celular = resultSet.getString("celular");
+    telefone = resultSet.getString("telefone");
   }
 
-  protected static void criarPessoa(Pessoa pessoa, Connection conexao) throws SQLException {
+  @Override
+  protected void criar(Connection conexao)
+      throws SQLException, ConflitoDeEntidade, EntidadeInvalida {
     String sql = "INSERT INTO pessoas(nome, endereco, email, dataDeNascimento, telefone, celular) VALUES(?, ?, ?, ?, ?, ?)";
     try (PreparedStatement ps = conexao.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-      ps.setString(1, pessoa.nome);
-      ps.setString(2, pessoa.endereco);
-      ps.setString(3, pessoa.email);
-      ps.setString(4, pessoa.dataDeNascimento);
-      ps.setString(5, pessoa.telefone);
-      ps.setString(6, pessoa.celular);
+      ps.setString(1, nome);
+      ps.setString(2, endereco);
+      ps.setString(3, email);
+      ps.setString(4, dataDeNascimento);
+      ps.setString(5, telefone);
+      ps.setString(6, celular);
       ps.execute();
       ResultSet rst = ps.getGeneratedKeys();
       if (!rst.next()) {
         throw new SQLException("Não foi encontrado id retornado ao criar pessoa");
       }
-      pessoa.id = rst.getLong(1);
+      id = rst.getLong(1);
     }
   }
 
-  protected static void atualizarPessoa(Pessoa pessoa, Connection conexao) throws SQLException {
+  @Override
+  protected void atualizar(Connection conexao)
+      throws SQLException, ConflitoDeEntidade, EntidadeInvalida {
     String sql = "UPDATE pessoas SET nome = ?, endereco = ?, email = ?, dataDeNascimento = ?, telefone = ?, celular = ? WHERE id = ?";
     try (PreparedStatement ps = conexao.prepareStatement(sql)) {
-      ps.setString(1, pessoa.nome);
-      ps.setString(2, pessoa.endereco);
-      ps.setString(3, pessoa.email);
-      ps.setString(4, pessoa.dataDeNascimento);
-      ps.setString(5, pessoa.telefone);
-      ps.setString(6, pessoa.celular);
-      ps.setLong(7, pessoa.id);
+      ps.setString(1, nome);
+      ps.setString(2, endereco);
+      ps.setString(3, email);
+      ps.setString(4, dataDeNascimento);
+      ps.setString(5, telefone);
+      ps.setString(6, celular);
+      ps.setLong(7, id);
       ps.execute();
     }
+  }
+
+  protected void remover(Connection conexao) throws SQLException, ConflitoDeEntidade {
+    String sql = "DELETE FROM pessoas WHERE id = ?";
+    try (PreparedStatement ps = conexao.prepareStatement(sql)) {
+      ps.setLong(1, id);
+      ps.execute();
+    }
+  }
+
+  protected Boolean possuoEmailUnico(Connection conexao) throws SQLException {
+    boolean manterConexao = true;
+    if (conexao == null) {
+      conexao = BancoDeDados.pegarConexao();
+      manterConexao = false;
+    }
+    boolean emailUnico = true;
+    String sql = "SELECT * FROM pessoas WHERE email = ?";
+    try (PreparedStatement ps = conexao.prepareStatement(sql)) {
+      ps.setString(1, email);
+      ResultSet rst = ps.executeQuery();
+      if (rst.next() && rst.getLong("id") != id) {
+        emailUnico = false;
+      }
+    }
+    if (!manterConexao) {
+      conexao.close();
+    }
+    return emailUnico;
   }
 }

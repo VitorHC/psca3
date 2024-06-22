@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 public class Funcionario extends Pessoa {
+
   private String senha = "";
 
   public String getSenha() {
@@ -42,7 +43,8 @@ public class Funcionario extends Pessoa {
     return true;
   }
 
-  @Override public void validar() throws EntidadeInvalida {
+  @Override
+  public void validar() throws EntidadeInvalida {
     try {
       super.validar();
     } catch (EntidadeInvalida excep) {
@@ -53,126 +55,74 @@ public class Funcionario extends Pessoa {
     }
   }
 
-  @Override public void criar() throws SQLException, EntidadeInvalida, ConflitoDeEntidade {
+  @Override
+  protected void mapear(ResultSet resultSet) throws SQLException {
+    super.mapear(resultSet);
+    senha = "";
+  }
+
+  @Override
+  protected void criar(Connection conexao)
+      throws SQLException, EntidadeInvalida, ConflitoDeEntidade {
     if (id > 0) {
-      throw new ConflitoDeEntidade("Tentativa de criar funcionário que já possui um id", "Funcionário");
+      throw new ConflitoDeEntidade("Tentativa de criar funcionário que já possui um id",
+          "Funcionário");
     }
 
     validar();
 
-    try (Connection conexao = BancoDeDados.pegarConexao()) {
-      try (PreparedStatement ps = conexao.prepareStatement("SELECT * FROM pessoas WHERE email = ?")) {
-        ps.setString(1, email);
-        ResultSet rst = ps.executeQuery();
-        if (rst.next()) {
-          throw new ConflitoDeEntidade("E-mail em uso", "Funcionário");
-        }
-      }
+    if (!possuoEmailUnico(conexao)) {
+      throw new ConflitoDeEntidade("E-mail em uso", "Funcionário");
+    }
 
-      conexao.setAutoCommit(false);
+    super.criar(conexao);
 
-      String sql = "INSERT INTO pessoas(nome, endereco, email, dataDeNascimento, telefone, celular) VALUES(?, ?, ?, ?, ?, ?)";
-      try (PreparedStatement ps = conexao.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-        ps.setString(1, nome);
-        ps.setString(2, endereco);
-        ps.setString(3, email);
-        ps.setString(4, dataDeNascimento);
-        ps.setString(5, telefone);
-        ps.setString(6, celular);
-        ps.execute();
-        ResultSet rst = ps.getGeneratedKeys();
-        if (rst.next()) {
-          id = rst.getLong(1);
-        }
-      } catch (Exception e) {
-        conexao.rollback();
-        throw e;
-      }
-
-      sql = "INSERT INTO funcionarios(pessoaId, senha) VALUES (?, ?)";
-      try (PreparedStatement ps = conexao.prepareStatement(sql)) {
-        ps.setLong(1, id);
-        ps.setString(2, senha);
-        ps.execute();
-      } catch (Exception e) {
-        conexao.rollback();
-        throw e;
-      }
-
-      conexao.commit();
+    String sql = "INSERT INTO funcionarios(pessoaId, senha) VALUES (?, ?)";
+    try (PreparedStatement ps = conexao.prepareStatement(sql)) {
+      ps.setLong(1, id);
+      ps.setString(2, senha);
+      ps.execute();
     }
   }
 
-  @Override public void atualizar() throws SQLException, EntidadeInvalida, ConflitoDeEntidade {
+  @Override
+  protected void atualizar(Connection conexao)
+      throws SQLException, EntidadeInvalida, ConflitoDeEntidade {
     if (id == 0) {
       throw new ConflitoDeEntidade("Tentativa de atualizar funcionário sem um id", "Funcionário");
     }
 
     validar();
 
-    try (Connection conexao = BancoDeDados.pegarConexao()) {
-      if (!souFuncionario(conexao)) {
-        throw new ConflitoDeEntidade("Tentativa de atualizar funcionário sem registro", "Funcionário");
-      }
+    if (!souFuncionario(conexao)) {
+      throw new ConflitoDeEntidade("Tentativa de atualizar funcionário sem registro",
+          "Funcionário");
+    }
+    if (!possuoEmailUnico(conexao)) {
+      throw new ConflitoDeEntidade("E-mail em uso", "Funcionário");
+    }
 
-      String sql = "SELECT * FROM pessoas WHERE email = ?";
-      try (PreparedStatement ps = conexao.prepareStatement(sql)) {
-        ps.setString(1, email);
-        ResultSet rst = ps.executeQuery();
-        if (rst.next()) {
-          Long idExistente = rst.getLong("id");
-          if (!idExistente.equals(id)) {
-            throw new ConflitoDeEntidade("E-mail em uso", "Funcionário");
-          }
-        }
-      }
+    super.atualizar(conexao);
 
-      conexao.setAutoCommit(false);
-
-      sql = "UPDATE pessoas SET nome = ?, endereco = ?, email = ?, dataDeNascimento = ?, telefone = ?, celular = ? WHERE id = ?";
-      try (PreparedStatement ps = conexao.prepareStatement(sql)) {
-        ps.setString(1, nome);
-        ps.setString(2, endereco);
-        ps.setString(3, email);
-        ps.setString(4, dataDeNascimento);
-        ps.setString(5, telefone);
-        ps.setString(6, celular);
-        ps.setLong(7, id);
-        ps.execute();
-      } catch (Exception e) {
-        conexao.rollback();
-        throw e;
-      }
-
-      sql = "UPDATE funcionarios SET senha = ? WHERE pessoaId = ?";
-      try (PreparedStatement ps = conexao.prepareStatement(sql)) {
-        ps.setString(1, senha);
-        ps.setLong(2, id);
-        ps.execute();
-      } catch (Exception e) {
-        conexao.rollback();
-        throw e;
-      }
-
-      conexao.commit();
+    String sql = "UPDATE funcionarios SET senha = ? WHERE pessoaId = ?";
+    try (PreparedStatement ps = conexao.prepareStatement(sql)) {
+      ps.setString(1, senha);
+      ps.setLong(2, id);
+      ps.execute();
     }
   }
 
-  @Override public void remover() throws SQLException, ConflitoDeEntidade {
+  @Override
+  protected void remover(Connection conexao) throws SQLException, ConflitoDeEntidade {
     if (id == 0) {
       throw new ConflitoDeEntidade("Tentativa de remover funcionário sem id", "Funcionário");
     }
-    try (Connection conexao = BancoDeDados.pegarConexao()) {
-      if (!souFuncionario(conexao)) {
-        throw new ConflitoDeEntidade(
-            "Tentativa de remover pessoa que não existe ou que não é um funcionário", "Funcionário");
-      }
-      String sql = "DELETE FROM pessoas WHERE id = ?";
-      try (PreparedStatement ps = conexao.prepareStatement(sql)) {
-        ps.setLong(1, id);
-        ps.execute();
-      }
+    if (!souFuncionario(conexao)) {
+      throw new ConflitoDeEntidade(
+          "Tentativa de remover pessoa que não existe ou que não é um funcionário",
+          "Funcionário");
     }
+    super.remover(conexao);
   }
 
   static public Funcionario login(String email, String senha) throws SQLException {
@@ -184,14 +134,7 @@ public class Funcionario extends Pessoa {
         ResultSet result = ps.executeQuery();
         if (result.next()) {
           Funcionario f = new Funcionario();
-          f.id = result.getLong("id");
-          f.nome = result.getString("nome");
-          f.email = result.getString("email");
-          f.endereco = result.getString("endereco");
-          f.dataDeNascimento = result.getString("dataDeNascimento");
-          f.celular = result.getString("celular");
-          f.telefone = result.getString("telefone");
-          f.senha = "";
+          f.mapear(result);
           return f;
         }
       }

@@ -56,116 +56,81 @@ public class Paciente extends Pessoa {
     }
   }
 
-  @Override public void criar() throws SQLException, EntidadeInvalida, ConflitoDeEntidade {
+  @Override
+  protected void mapear(ResultSet resultSet) throws SQLException {
+    super.mapear(resultSet);
+    cpf = resultSet.getString("cpf");
+  }
+
+  protected Boolean possuoCPFUnico(Connection conexao) throws SQLException {
+    boolean manterConexao = true;
+    if (conexao == null) {
+      conexao = BancoDeDados.pegarConexao();
+      manterConexao = false;
+    }
+    boolean crmUnico = true;
+    String sql = "SELECT * FROM pacientes WHERE cpf = ?";
+    try (PreparedStatement ps = conexao.prepareStatement(sql)) {
+      ps.setString(1, cpf);
+      ResultSet rst = ps.executeQuery();
+      if (rst.next() && rst.getLong("pessoaId") != id) {
+        crmUnico = false;
+      }
+    }
+    if (!manterConexao) {
+      conexao.close();
+    }
+    return crmUnico;
+  }
+
+  @Override protected void criar(Connection conexao) throws SQLException, EntidadeInvalida, ConflitoDeEntidade {
     if (id > 0) {
       throw new ConflitoDeEntidade("Tentativa de criar paciente que já possui um id", "Paciente");
     }
 
     validar();
 
-    try (Connection conexao = BancoDeDados.pegarConexao()) {
-      String sql = "SELECT * FROM pessoas AS `pe` INNER JOIN pacientes AS `pa` ON `pe`.id = `pa`.pessoaId WHERE email = ? OR cpf = ?";
-      try (PreparedStatement ps = conexao.prepareStatement(sql)) {
-        ps.setString(1, email);
-        ps.setString(2, cpf);
-        ResultSet rst = ps.executeQuery();
-        while (rst.next()) {
-          if (rst.getString("email").equals(email)) {
-            throw new ConflitoDeEntidade("E-mail em uso", "Paciente");
-          }
-          throw new ConflitoDeEntidade("CPF em uso", "Paciente");
-        }
-      }
+    if (!possuoEmailUnico(conexao)) {
+      throw new ConflitoDeEntidade("E-mail em uso", "Paciente");
+    }
+    if (!possuoCPFUnico(conexao)) {
+      throw new ConflitoDeEntidade("CPF em uso", "Paciente");
+    }
 
-      conexao.setAutoCommit(false);
+    super.criar(conexao);
 
-      sql = "INSERT INTO pessoas(nome, endereco, email, dataDeNascimento, telefone, celular) VALUES(?, ?, ?, ?, ?, ?)";
-      try (PreparedStatement ps = conexao.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-        ps.setString(1, nome);
-        ps.setString(2, endereco);
-        ps.setString(3, email);
-        ps.setString(4, dataDeNascimento);
-        ps.setString(5, telefone);
-        ps.setString(6, celular);
-        ps.execute();
-        ResultSet rst = ps.getGeneratedKeys();
-        if (rst.next()) {
-          id = rst.getLong(1);
-        }
-      } catch (Exception e) {
-        conexao.rollback();
-        throw e;
-      }
-
-      sql = "INSERT INTO pacientes(pessoaId, cpf) VALUES (?, ?)";
-      try (PreparedStatement ps = conexao.prepareStatement(sql)) {
-        ps.setLong(1, id);
-        ps.setString(2, cpf);
-        ps.execute();
-      } catch (Exception e) {
-        conexao.rollback();
-        throw e;
-      }
-
-      conexao.commit();
+    String sql = "INSERT INTO pacientes(pessoaId, cpf) VALUES (?, ?)";
+    try (PreparedStatement ps = conexao.prepareStatement(sql)) {
+      ps.setLong(1, id);
+      ps.setString(2, cpf);
+      ps.execute();
     }
   }
 
-  @Override public void atualizar() throws SQLException, EntidadeInvalida, ConflitoDeEntidade {
+  @Override protected void atualizar(Connection conexao) throws SQLException, ConflitoDeEntidade, EntidadeInvalida {
     if (id == 0) {
       throw new ConflitoDeEntidade("Tentativa de atualizar paciente sem um id", "Paciente");
     }
 
     validar();
 
-    try (Connection conexao = BancoDeDados.pegarConexao()) {
-      if (!souPaciente(conexao)) {
-        throw new ConflitoDeEntidade("Tentativa de atualizar paciente sem registro", "Paciente");
-      }
-      String sql = "SELECT * FROM pacientes AS `pa` INNER JOIN pessoas AS `pe` ON `pa`.pessoaId = `pe`.id WHERE email = ? OR cpf = ?";
-      try (PreparedStatement ps = conexao.prepareStatement(sql)) {
-        ps.setString(1, email);
-        ps.setString(2, cpf);
-        ResultSet rst = ps.executeQuery();
-        while (rst.next()) {
-          Long idExistente = rst.getLong("id");
-          if (!idExistente.equals(id)) {
-            if (rst.getString("email").equals(email)) {
-              throw new ConflitoDeEntidade("E-mail em uso", "Paciente");
-            }
-            throw new ConflitoDeEntidade("CPF em uso", "Paciente");
-          }
-        }
-      }
+    if (!souPaciente(conexao)) {
+      throw new ConflitoDeEntidade("Tentativa de atualizar paciente sem registro", "Paciente");
+    }
+    if (!possuoEmailUnico(conexao)) {
+      throw new ConflitoDeEntidade("E-mail em uso", "Paciente");
+    }
+    if (!possuoCPFUnico(conexao)) {
+      throw new ConflitoDeEntidade("CPF em uso", "Paciente");
+    }
 
-      conexao.setAutoCommit(false);
+    super.atualizar(conexao);
 
-      sql = "UPDATE pessoas SET nome = ?, endereco = ?, email = ?, dataDeNascimento = ?, telefone = ?, celular = ? WHERE id = ?";
-      try (PreparedStatement ps = conexao.prepareStatement(sql)) {
-        ps.setString(1, nome);
-        ps.setString(2, endereco);
-        ps.setString(3, email);
-        ps.setString(4, dataDeNascimento);
-        ps.setString(5, telefone);
-        ps.setString(6, celular);
-        ps.setLong(7, id);
-        ps.execute();
-      } catch (Exception e) {
-        conexao.rollback();
-        throw e;
-      }
-
-      sql = "UPDATE pacientes SET cpf = ? WHERE pessoaId = ?";
-      try (PreparedStatement ps = conexao.prepareStatement(sql)) {
-        ps.setString(1, cpf);
-        ps.setLong(2, id);
-        ps.execute();
-      } catch (Exception e) {
-        conexao.rollback();
-        throw e;
-      }
-
-      conexao.commit();
+    String sql = "UPDATE pacientes SET cpf = ? WHERE pessoaId = ?";
+    try (PreparedStatement ps = conexao.prepareStatement(sql)) {
+      ps.setString(1, cpf);
+      ps.setLong(2, id);
+      ps.execute();
     }
   }
 
@@ -179,11 +144,7 @@ public class Paciente extends Pessoa {
         throw new ConflitoDeEntidade(
             "Tentativa de remover pessoa que não existe ou que não é um paciente", "Paciente");
       }
-      String sql = "DELETE FROM pessoas WHERE id = ?";
-      try (PreparedStatement ps = conexao.prepareStatement(sql)) {
-        ps.setLong(1, id);
-        ps.execute();
-      }
+      super.remover(conexao);
     }
   }
 
@@ -196,14 +157,7 @@ public class Paciente extends Pessoa {
         ResultSet result = ps.executeQuery();
         if (result.next()) {
           paciente = new Paciente();
-          paciente.id = result.getLong("id");
-          paciente.nome = result.getString("nome");
-          paciente.endereco = result.getString("endereco");
-          paciente.email = result.getString("email");
-          paciente.dataDeNascimento = result.getString("dataDeNascimento");
-          paciente.cpf = result.getString("cpf");
-          paciente.celular = result.getString("celular");
-          paciente.telefone = result.getString("telefone");
+          paciente.mapear(result);
         }
       }
     }
@@ -218,14 +172,7 @@ public class Paciente extends Pessoa {
         ResultSet result = ps.executeQuery();
         while (result.next()) {
           Paciente paciente = new Paciente();
-          paciente.id = result.getLong("id");
-          paciente.nome = result.getString("nome");
-          paciente.endereco = result.getString("endereco");
-          paciente.email = result.getString("email");
-          paciente.dataDeNascimento = result.getString("dataDeNascimento");
-          paciente.cpf = result.getString("cpf");
-          paciente.celular = result.getString("celular");
-          paciente.telefone = result.getString("telefone");
+          paciente.mapear(result);
           pacientes.add(paciente);
         }
       }

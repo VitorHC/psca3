@@ -1,8 +1,9 @@
 package View;
 
+import static javax.swing.JOptionPane.showMessageDialog;
+
 import Model.ConflitoDeEntidade;
 import Model.EntidadeInvalida;
-import Model.Medico;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.EventQueue;
@@ -22,12 +23,10 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
-import static javax.swing.JOptionPane.showMessageDialog;
+public class PacienteForm extends JFrame {
 
-public class MedicoForm extends JFrame {
-
-  private Model.Medico medico;
-  private int numeroDeCampos = 8;
+  private Model.Paciente paciente;
+  private int numeroDeCampos = 7;
   private int alturaDeCampo = 20;
   private int alturaDeRotuloDeCampo = 12;
   private int totalFormHeight = (alturaDeRotuloDeCampo + alturaDeCampo) * numeroDeCampos + 100;
@@ -36,7 +35,7 @@ public class MedicoForm extends JFrame {
   JTextField
       campoNome, campoEmail, campoEndereco,
       campoDataDeNascimento, campoTelefone, campoCelular,
-      campoCRM, campoEspecialidade;
+      campoCPF;
   private JButton botaoSubmeter;
 
   private JTextField novoCampo(JLabel label) {
@@ -71,72 +70,65 @@ public class MedicoForm extends JFrame {
     campoEmail = novoCampo(new JLabel("E-mail"));
     campoDataDeNascimento = novoCampo(new JLabel("Data de nascimento"));
     campoEndereco = novoCampo(new JLabel("Endereço"));
-    campoCRM = novoCampo(new JLabel("CRM"));
-    campoEspecialidade = novoCampo(new JLabel("Especialidade"));
+    campoCPF = novoCampo(new JLabel("CPF"));
     campoCelular = novoCampo(new JLabel("Celular"));
     campoTelefone = novoCampo(new JLabel("Telefone"));
 
-    if (medico != null) {
-      campoNome.setText(medico.getNome());
-      campoEmail.setText(medico.getEmail());
-      campoDataDeNascimento.setText(medico.getDataDeNascimento());
-      campoEndereco.setText(medico.getEndereco());
-      campoCRM.setText(medico.getCRM());
-      campoEspecialidade.setText(medico.getEspecialidade());
-      campoCelular.setText(medico.getCelular());
-      campoTelefone.setText(medico.getTelefone());
+    if (paciente != null) {
+      campoNome.setText(paciente.getNome());
+      campoEmail.setText(paciente.getEmail());
+      campoDataDeNascimento.setText(paciente.getDataDeNascimento());
+      campoEndereco.setText(paciente.getEndereco());
+      campoCPF.setText(paciente.getCPF());
+      campoCelular.setText(paciente.getCelular());
+      campoTelefone.setText(paciente.getTelefone());
     }
   }
 
   private void criarBotaoSubmeter() {
-    botaoSubmeter = new JButton(medico == null ? "Cadastrar" : "Atualizar");
+    botaoSubmeter = new JButton(paciente == null ? "Cadastrar" : "Atualizar");
     botaoSubmeter.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent event) {
-        Medico m = new Model.Medico();
-        if (!m.setNome(campoNome.getText())) {
+        Model.Paciente p = new Model.Paciente();
+        if (!p.setNome(campoNome.getText())) {
           showMessageDialog(painelFormulario, "Nome inválido. Deve conter ao menos 3 caracteres.");
           return;
         }
-        if (!m.setEmail(campoEmail.getText())) {
+        if (!p.setEmail(campoEmail.getText())) {
           showMessageDialog(painelFormulario, "E-mail inválido. Cheque o formato.");
           return;
         }
-        if (!m.setDataDeNascimento(campoDataDeNascimento.getText())) {
+        if (!p.setDataDeNascimento(campoDataDeNascimento.getText())) {
           showMessageDialog(painelFormulario,
               "Data de nascimento inválida. Deve possuir formato 21/06/1994");
           return;
         }
-        if (!m.setEndereco(campoEndereco.getText())) {
+        if (!p.setEndereco(campoEndereco.getText())) {
           showMessageDialog(painelFormulario,
               "Endereço inválido. Deve possuir ao menos 3 caracteres");
           return;
         }
-        if (!m.setCRM(campoCRM.getText())) {
-          showMessageDialog(painelFormulario, "CRM inválido. Deve conter 13 caracteres.");
+        if (!p.setCPF(campoCPF.getText())) {
+          showMessageDialog(painelFormulario, "CPF inválido. Deve conter 14 caracteres.");
           return;
         }
-        if (!m.setEspecialidade(campoEspecialidade.getText())) {
-          showMessageDialog(painelFormulario,
-              "Especialidade inválida. Deve possuir ao menos 3 caracteres");
-          return;
-        }
-        m.setTelefone(campoTelefone.getText());
-        m.setCelular(campoCelular.getText());
-        if (medico != null) {
-          m.setId(medico.getId());
+        p.setTelefone(campoTelefone.getText());
+        p.setCelular(campoCelular.getText());
+        if (paciente != null) {
+          p.setId(paciente.getId());
         }
         try {
           String mensagemDeSucesso;
-          if (medico == null) {
-            m.criar();
+          if (paciente == null) {
+            p.criar();
             mensagemDeSucesso = "Cadastro feito com sucesso";
           } else {
-            m.atualizar();
+            p.atualizar();
             mensagemDeSucesso = "Atualizado com sucesso";
           }
           showMessageDialog(painelFormulario, mensagemDeSucesso);
-          new Medicos().setVisible(true);
+          new View.Pacientes().setVisible(true);
           dispose();
         } catch (ConflitoDeEntidade | EntidadeInvalida excep) {
           showMessageDialog(painelFormulario, excep.getMessage());
@@ -148,9 +140,9 @@ public class MedicoForm extends JFrame {
     });
   }
 
-  MedicoForm(Model.Medico m) {
-    medico = m;
-    String title = medico == null ? "Cadastrar Médico" : "Atualizar Médico";
+  PacienteForm(Model.Paciente p) {
+    paciente = p;
+    String title = paciente == null ? "Cadastrar Paciente" : "Atualizar Paciente";
     setTitle(title);
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     setResizable(false);
@@ -185,7 +177,7 @@ public class MedicoForm extends JFrame {
   public static void main(String[] args) {
     EventQueue.invokeLater(() -> {
       try {
-        new MedicoForm(null).setVisible(true);
+        new View.PacienteForm(null).setVisible(true);
       } catch (Exception e) {
         e.printStackTrace();
       }

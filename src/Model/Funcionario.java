@@ -204,11 +204,11 @@ public class Funcionario extends Pessoa {
     Funcionario func = new Funcionario();
     func.setNome("Aluisio");
     func.setDataDeNascimento("21/06/1994");
-    func.setEmail("aluisioordones1@gmail.com");
+    func.setEmail("aluisio@gmail.com");
     func.setEndereco("Rua São Romão");
     func.setCelular("85858585");
     func.setTelefone("86868686");
-    func.setSenha("12345678");
+    func.setSenha("12345");
     try {
       func.criar();
     } catch (Exception exception) {
@@ -221,7 +221,7 @@ public class Funcionario extends Pessoa {
       System.out.println(exception.getMessage());
     }
     try {
-      Funcionario f = login("aluisioordones1@gmail.com", "12345678");
+      Funcionario f = login("aluisio@gmail.com", "12345");
       if (f == null) {
         System.out.println("Falha no login");
       } else {
@@ -236,10 +236,10 @@ public class Funcionario extends Pessoa {
     } catch (Exception except) {
       System.out.println(except.getMessage());
     }
-    try {
-      func.remover();
-    } catch (Exception exception) {
-      System.out.println(exception.getMessage());
-    }
+//    try {
+//      func.remover();
+//    } catch (Exception exception) {
+//      System.out.println(exception.getMessage());
+//    }
   }
 }

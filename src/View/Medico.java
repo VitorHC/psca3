@@ -66,7 +66,8 @@ public class Medico extends JFrame {
     setTitle("Médico " + medico.getNome());
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     setResizable(false);
-    setSize(1240, 820);
+    setSize(500, 400);
+    setLocationRelativeTo(null);
     getContentPane().setBackground(Color.WHITE);
     setLayout(new GridBagLayout());
 

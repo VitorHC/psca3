@@ -1,6 +1,8 @@
 package View;
 
-import Model.Medico;
+import static javax.swing.JOptionPane.showMessageDialog;
+
+import Model.Paciente;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.EventQueue;
@@ -27,28 +29,22 @@ import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import static javax.swing.JOptionPane.showMessageDialog;
-
-public class Medicos extends JFrame {
+public class Pacientes extends JFrame {
 
   private JTextField campoDeBusca;
 
   private JButton botaoBuscar, botaoAdicionar;
 
-  private JList listaMedicos;
+  private JList listaPacientes;
 
-  private DefaultListModel<String> medicosDescricao;
+  private DefaultListModel<String> pacientesDescricao;
 
-  private List<Medico> medicos;
+  private List<Paciente> pacientes;
 
   private String descricaoSelecionada;
 
-  private String gerarDescricaoMedico(Medico medico) {
-    return medico.getNome()
-        + " | "
-        + medico.getCRM()
-        + " | "
-        + medico.getEspecialidade();
+  private String gerarDescricaoPaciente(Model.Paciente p) {
+    return p.getNome() + " | " + p.getCPF();
   }
 
   private void criarBotaoBuscar() {
@@ -57,15 +53,15 @@ public class Medicos extends JFrame {
       @Override
       public void actionPerformed(ActionEvent event) {
         try {
-          Optional<Medico> optMedico = Model.Medico.buscar(campoDeBusca.getText());
-          if (optMedico.isEmpty()) {
-            showMessageDialog(getContentPane(), "Médico não encontrado");
+          Optional<Model.Paciente> optPaciente = Model.Paciente.buscar(campoDeBusca.getText());
+          if (optPaciente.isEmpty()) {
+            showMessageDialog(getContentPane(), "Paciente não encontrado");
             return;
           }
-          while (!medicosDescricao.isEmpty()) {
-            medicosDescricao.removeElement(medicosDescricao.get(0));
+          while (!pacientesDescricao.isEmpty()) {
+            pacientesDescricao.removeElement(pacientesDescricao.get(0));
           }
-          medicosDescricao.addElement(gerarDescricaoMedico(optMedico.get()));
+          pacientesDescricao.addElement(gerarDescricaoPaciente(optPaciente.get()));
         } catch (SQLException e) {
           showMessageDialog(getContentPane(), "Algo de errado aconteceu. Contate o administrador.");
           e.printStackTrace();
@@ -79,7 +75,7 @@ public class Medicos extends JFrame {
     painelDeBusca.setBackground(Color.DARK_GRAY);
     criarBotaoBuscar();
     campoDeBusca = new JTextField(30);
-    campoDeBusca.setToolTipText("CRM");
+    campoDeBusca.setToolTipText("CPF");
     painelDeBusca.add(campoDeBusca);
     painelDeBusca.add(botaoBuscar);
     return painelDeBusca;
@@ -96,7 +92,7 @@ public class Medicos extends JFrame {
   private JPanel criarPainelRotuloDaLista() {
     JPanel painelRotuloLista = new JPanel();
     painelRotuloLista.setBackground(Color.WHITE);
-    JLabel rotuloLista = new JLabel("Médico | CRM | Especialidade");
+    JLabel rotuloLista = new JLabel("Nome | CPF");
     painelRotuloLista.add(rotuloLista);
     return painelRotuloLista;
   }
@@ -106,7 +102,7 @@ public class Medicos extends JFrame {
     botaoAdicionar.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent event) {
-        new MedicoForm(null).setVisible(true);
+        new PacienteForm(null).setVisible(true);
         dispose();
       }
     });
@@ -120,13 +116,13 @@ public class Medicos extends JFrame {
     return painelBotaoAdicionar;
   }
 
-  private void buscarMedicos() {
+  private void buscarPacientes() {
     try {
-      medicos = Model.Medico.buscarTodos();
-      medicos.sort(((m1, m2) -> m1.getNome().compareToIgnoreCase(m2.getNome())));
-      medicosDescricao = new DefaultListModel<String>();
-      for (Medico medico : medicos) {
-        medicosDescricao.addElement(gerarDescricaoMedico(medico));
+      pacientes = Model.Paciente.buscarTodos();
+      pacientes.sort(((m1, m2) -> m1.getNome().compareToIgnoreCase(m2.getNome())));
+      pacientesDescricao = new DefaultListModel<String>();
+      for (Model.Paciente p : pacientes) {
+        pacientesDescricao.addElement(gerarDescricaoPaciente(p));
       }
     } catch (SQLException except) {
       showMessageDialog(null, "Algo deu errado. Contate o administrador.");
@@ -134,16 +130,16 @@ public class Medicos extends JFrame {
     }
   }
 
-  private JScrollPane criarPainelScrollDeMedicos() {
-    buscarMedicos();
-    listaMedicos = new JList(medicosDescricao);
-    listaMedicos.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
-    listaMedicos.setLayoutOrientation(JList.HORIZONTAL_WRAP);
-    listaMedicos.setVisibleRowCount(-1);
-    listaMedicos.setFixedCellHeight(24);
-    listaMedicos.setFixedCellWidth(450);
-    listaMedicos.setFont(new Font("Arial", Font.PLAIN, 12));
-    listaMedicos.addListSelectionListener(new ListSelectionListener() {
+  private JScrollPane criarPainelScrollDePacientes() {
+    buscarPacientes();
+    listaPacientes = new JList(pacientesDescricao);
+    listaPacientes.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+    listaPacientes.setLayoutOrientation(JList.HORIZONTAL_WRAP);
+    listaPacientes.setVisibleRowCount(-1);
+    listaPacientes.setFixedCellHeight(24);
+    listaPacientes.setFixedCellWidth(450);
+    listaPacientes.setFont(new Font("Arial", Font.PLAIN, 12));
+    listaPacientes.addListSelectionListener(new ListSelectionListener() {
       @Override
       public void valueChanged(ListSelectionEvent event) {
         if (!event.getValueIsAdjusting()) {
@@ -151,13 +147,13 @@ public class Medicos extends JFrame {
         }
       }
     });
-    listaMedicos.addMouseListener(new MouseAdapter() {
+    listaPacientes.addMouseListener(new MouseAdapter() {
       @Override
       public void mouseClicked(MouseEvent event) {
         if (event.getClickCount() == 2 && descricaoSelecionada != null) {
-          for (Medico medico : medicos) {
-            if (gerarDescricaoMedico(medico).equals(descricaoSelecionada)) {
-              new View.Medico(medico).setVisible(true);
+          for (Model.Paciente p : pacientes) {
+            if (gerarDescricaoPaciente(p).equals(descricaoSelecionada)) {
+              new View.Paciente(p).setVisible(true);
               dispose();
               break;
             }
@@ -165,21 +161,21 @@ public class Medicos extends JFrame {
         }
       }
     });
-    JScrollPane listaMedicosScroll = new JScrollPane(listaMedicos);
-    listaMedicosScroll.setPreferredSize(new Dimension(450, 450));
-    return listaMedicosScroll;
+    JScrollPane listaPacientesScroll = new JScrollPane(listaPacientes);
+    listaPacientesScroll.setPreferredSize(new Dimension(450, 450));
+    return listaPacientesScroll;
   }
 
-  private JPanel criarPainelDeMedicos() {
-    JPanel painelDeMedicos = new JPanel();
-    painelDeMedicos.setBackground(Color.WHITE);
-    JScrollPane painelScrollDeMedicos = criarPainelScrollDeMedicos();
-    painelDeMedicos.add(painelScrollDeMedicos);
-    return painelDeMedicos;
+  private JPanel criarPainelDePacientes() {
+    JPanel painelDePacientes = new JPanel();
+    painelDePacientes.setBackground(Color.WHITE);
+    JScrollPane painelScrollDePacientes = criarPainelScrollDePacientes();
+    painelDePacientes.add(painelScrollDePacientes);
+    return painelDePacientes;
   }
 
-  Medicos() {
-    setTitle("Médicos");
+  Pacientes() {
+    setTitle("Pacientes");
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     setResizable(false);
     setSize(700, 820);
@@ -189,7 +185,7 @@ public class Medicos extends JFrame {
 
     GridBagConstraints gbc = null;
 
-    JLabel rotuloTitulo = new JLabel("Médicos");
+    JLabel rotuloTitulo = new JLabel("Pacientes");
     rotuloTitulo.setBackground(Color.WHITE);
     rotuloTitulo.setFont(new Font("Arial", Font.BOLD | Font.ITALIC, 30));
     add(rotuloTitulo);
@@ -206,7 +202,7 @@ public class Medicos extends JFrame {
     JPanel painelCorpo = criarPainelCorpo();
     painelCorpo.add(criarPaineldoBotaoAdicionar());
     painelCorpo.add(criarPainelRotuloDaLista());
-    painelCorpo.add(criarPainelDeMedicos());
+    painelCorpo.add(criarPainelDePacientes());
     gbc = new GridBagConstraints();
     gbc.anchor = GridBagConstraints.PAGE_START;
     gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -219,7 +215,7 @@ public class Medicos extends JFrame {
   public static void main(String[] args) {
     EventQueue.invokeLater(() -> {
       try {
-        new View.Medicos().setVisible(true);
+        new Pacientes().setVisible(true);
       } catch (Exception e) {
         e.printStackTrace();
       }

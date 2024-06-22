@@ -1,60 +1,123 @@
 package View;
 
+import java.awt.Color;
+import java.awt.EventQueue;
 import java.awt.Font;
-import java.awt.SystemColor;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
 
-public class Paciente extends JFrame{
-    private JPanel telaPaciente;
+public class Paciente extends JFrame {
+  private Model.Paciente paciente;
+  private JPanel painelDeInformacoes;
+  private int informacaoGridY = 0;
+  private JButton botaoAtualizar;
 
-public Paciente(){
+  private void adicionarInformacao(String nomeCampo, String valorCampo) {
+    JLabel rotulo = new JLabel(nomeCampo);
+    rotulo.setFont(new Font("Arial", Font.BOLD, 14));
+    JLabel campo = new JLabel(valorCampo);
+    campo.setFont(new Font("Verdana", Font.PLAIN, 12));
+    informacaoGridY++;
+    GridBagConstraints gbc = new GridBagConstraints();
+    gbc.insets = new Insets(6, 8 , 6, 8);
+    gbc.anchor = GridBagConstraints.LINE_START;
+    gbc.gridy = informacaoGridY;
+    gbc.gridx = 1;
+    painelDeInformacoes.add(rotulo, gbc);
+    gbc.gridy = informacaoGridY;
+    gbc.gridx = 2;
+    gbc.weightx = 1;
+    painelDeInformacoes.add(campo, gbc);
+  }
 
-    setLocationRelativeTo(null);
-    setResizable(false);
-    setTitle("Paciente");
+  private void criarPainelDeInformacoes() {
+    painelDeInformacoes = new JPanel(new GridBagLayout());
+    adicionarInformacao("Nome:", paciente.getNome());
+    adicionarInformacao("CPF:", paciente.getCPF());
+    adicionarInformacao("Data de Nascimento:", paciente.getDataDeNascimento());
+    adicionarInformacao("E-mail:", paciente.getEmail());
+    adicionarInformacao("Telefone:", paciente.getTelefone());
+    adicionarInformacao("Celular:", paciente.getCelular());
+    adicionarInformacao("Endereço:", paciente.getEndereco());
+  }
+
+  private void criarBotaoAtualizar() {
+    botaoAtualizar = new JButton("Atualizar");
+    botaoAtualizar.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent event) {
+        new PacienteForm(paciente).setVisible(true);
+        dispose();
+      }
+    });
+  }
+
+  Paciente(Model.Paciente p) {
+    paciente = p;
+    setTitle("Paciente " + paciente.getNome());
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    setBounds(600, 150, 1240, 820);
+    setResizable(false);
+    setSize(500, 400);
+    setLocationRelativeTo(null);
+    getContentPane().setBackground(Color.WHITE);
+    setLayout(new GridBagLayout());
 
-    telaPaciente = new JPanel();
-    telaPaciente.setBackground(SystemColor.white);
-    setContentPane(telaPaciente);
-    telaPaciente.setLayout(null);
+    GridBagConstraints gbc = null;
 
-    JLabel texto = new JLabel("Pacientes");
-    texto.setBounds(620, 0,520,100);
-    texto.setFont(new Font("Arial", 3, 30));
-    telaPaciente.add(texto);
+    JPanel painelPrincipal = new JPanel();
+    painelPrincipal.setLayout(new GridBagLayout());
+    painelPrincipal.setBackground(Color.WHITE);
 
-    JTextField pesquisar  = new JTextField("Nome ou CPF:");
-    pesquisar.setBounds(40,130,670,30);
-    telaPaciente.add(pesquisar);
+    JLabel rotuloTitulo = new JLabel("Paciente");
+    rotuloTitulo.setBackground(Color.WHITE);
+    rotuloTitulo.setFont(new Font("Arial", Font.BOLD, 18));
+    painelPrincipal.add(rotuloTitulo);
 
-    JButton btnPesquisar = new JButton("Pesquisar");
-    btnPesquisar.setBounds(690, 130, 130, 30);
-    telaPaciente.add(btnPesquisar);
+    criarPainelDeInformacoes();
+    gbc = new GridBagConstraints();
+    gbc.anchor = GridBagConstraints.PAGE_START;
+    gbc.gridy = 1;
+    gbc.weighty = 1;
+    gbc.insets = new Insets(20, 0, 20, 0);
+    painelPrincipal.add(painelDeInformacoes, gbc);
 
-   /* JPanel dados = new JPanel();
-    dados.setBackground(SystemColor.white);
-    dados.setBounds(400, 100,150,100);
-    setContentPane(dados);
-    dados.setLayout(null);*/
+    criarBotaoAtualizar();
+    gbc = new GridBagConstraints();
+    gbc.anchor = GridBagConstraints.PAGE_START;
+    gbc.gridy = 2;
+    painelPrincipal.add(botaoAtualizar, gbc);
 
-    JLabel nome = new JLabel("Nome: ");
-    nome.setBounds(40, 200, 150,30);
-    telaPaciente.add(nome);
+    gbc = new GridBagConstraints();
+    gbc.anchor = GridBagConstraints.PAGE_START;
+    gbc.gridy = 1;
+    gbc.weighty = 1;
+    add(painelPrincipal, gbc);
+  }
 
-    JLabel CPF = new JLabel("CPF: ");
-    CPF.setBounds(250, 200, 100,30);
-    telaPaciente.add(CPF);
-    
-
-    }
-
-
+  public static void main(String[] args) {
+    EventQueue.invokeLater(() -> {
+      try {
+        Model.Paciente p = new Model.Paciente();
+        p.setNome("Oswaldinho");
+        p.setDataDeNascimento("22/06/1997");
+        p.setEmail("oswaldo3@gmail.com");
+        p.setEndereco("Rua do Oswaldo");
+        p.setCelular("91919191");
+        p.setTelefone("81818181");
+        p.setCPF("134.134.134-13");
+        new Paciente(p).setVisible(true);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    });
+  }
 }
 
 

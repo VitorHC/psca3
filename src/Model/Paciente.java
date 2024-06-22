@@ -294,10 +294,10 @@ public class Paciente extends Pessoa {
       System.out.println(e.getMessage());
     }
 
-    try {
-      novoPaciente.remover();
-    } catch (Exception exception) {
-      System.out.println(exception.getMessage());
-    }
+//    try {
+//      novoPaciente.remover();
+//    } catch (Exception exception) {
+//      System.out.println(exception.getMessage());
+//    }
   }
 }

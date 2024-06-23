@@ -1,5 +1,6 @@
 package View;
 
+import Model.ConflitoDeEntidade;
 import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.Font;
@@ -8,6 +9,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.SQLException;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -114,6 +116,12 @@ public class Paciente extends JFrame {
     gbc.gridy = 2;
     painelPrincipal.add(botaoVoltar, gbc);
 
+    deletarbotao();
+    gbc = new GridBagConstraints();
+    gbc.anchor = GridBagConstraints.PAGE_START;
+    gbc.gridy = 2;
+    painelPrincipal.add(botaoDelete, gbc);
+
     gbc = new GridBagConstraints();
     gbc.anchor = GridBagConstraints.PAGE_START;
     gbc.gridy = 1;
@@ -123,13 +131,20 @@ public class Paciente extends JFrame {
 
   private void deletarbotao(){
     botaoDelete = new JButton("Deletar");
+
     botaoDelete.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent event){
-     
 
-     new Pacientes().setVisible(true);
-      dispose();
+      try {
+        paciente.remover();
+        new Pacientes().setVisible(true);
+        dispose();
+        
+      } catch (ConflitoDeEntidade | SQLException e) {
+        e.printStackTrace();
+      }
+     
       }
     });
   }

@@ -41,7 +41,7 @@ public class Pacientes extends JFrame {
 
   private List<Paciente> pacientes;
 
-  private String descricaoSelecionada;
+  public String descricaoSelecionada;
 
   private String gerarDescricaoPaciente(Model.Paciente p) {
     return p.getNome() + " | " + p.getCPF();

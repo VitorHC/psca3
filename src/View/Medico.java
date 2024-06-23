@@ -8,10 +8,14 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.SQLException;
+
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+
+import Model.ConflitoDeEntidade;
 
 public class Medico extends JFrame {
 
@@ -73,6 +77,26 @@ public class Medico extends JFrame {
 
   }
 
+  private void deletarbotao(){
+    botaoDelete = new JButton("Deletar");
+
+    botaoDelete.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent event){
+
+      try {
+        medico.remover();
+        new Medicos().setVisible(true);
+        dispose();
+        
+      } catch (ConflitoDeEntidade | SQLException e) {
+        e.printStackTrace();
+      }
+     
+      }
+    });
+  }
+
   Medico(Model.Medico m) {
     medico = m;
     setTitle("Médico " + medico.getNome());
@@ -119,6 +143,12 @@ public class Medico extends JFrame {
     gbc.gridy = 1;
     gbc.weighty = 1;
     add(painelPrincipal, gbc);
+
+    deletarbotao();
+    gbc = new GridBagConstraints();
+    gbc.anchor = GridBagConstraints.PAGE_START;
+    gbc.gridy = 2;
+    painelPrincipal.add(botaoDelete, gbc);
   }
 
   public static void main(String[] args) {

@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 public class Paciente extends JFrame {
@@ -138,6 +139,7 @@ public class Paciente extends JFrame {
 
       try {
         paciente.remover();
+        JOptionPane.showMessageDialog( null,"Paciente Excluido com sucesso!");
         new Pacientes().setVisible(true);
         dispose();
         

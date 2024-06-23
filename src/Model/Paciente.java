@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -17,7 +16,7 @@ public class Paciente extends Pessoa {
   }
 
   public Boolean setCPF(String cpf) {
-    if (cpf.length() != 14) {
+    if (cpf.length() != 11) {
       return false;
     }
     this.cpf = cpf;
